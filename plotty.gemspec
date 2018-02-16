@@ -10,10 +10,9 @@ Gem::Specification.new do |spec|
 	spec.summary       = %q{Draw graphs from data gathered by executing commands}
 	spec.homepage      = "https://github.com/ioquatix/plotty"
 
-	spec.files         = `git ls-files -z`.split("\x0").reject do |f|
-		f.match(%r{^(test|spec|features)/})
-	end
-	spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
+	spec.files         = `git ls-files`.split($/)
+	spec.executables   = spec.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
+	spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
 	spec.require_paths = ["lib"]
 
 	spec.add_dependency "samovar"
