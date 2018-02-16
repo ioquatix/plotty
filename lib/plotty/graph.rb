@@ -49,7 +49,7 @@ module Plotty
 				Scalar.new($1.to_i, $3.to_i, $2.to_i)
 			when /^(.*?):(.*?):(.*?)$/
 				Linear.new($1.to_i, $3.to_i, $2.to_i)
-			when command =~ /^(.*?):(.*?)$/
+			when /^(.*?):(.*?)$/
 				Linear.new($1.to_i, $2.to_i, 1)
 			end
 		end
@@ -59,6 +59,10 @@ module Plotty
 		def initialize(pattern, command)
 			@pattern = Regexp.new(pattern)
 			@command = command
+		end
+		
+		def title
+			@command
 		end
 		
 		def call(value)
@@ -90,10 +94,10 @@ module Plotty
 			@y = y
 		end
 		
-		def self.parse(x, y, command)
+		def self.parse(x, y, commands)
 			self.new(
 				Sequence.parse(x),
-				Function.new(y, command.first),
+				commands.collect{|command| Function.new(y, command)},
 			)
 		end
 		
@@ -102,20 +106,20 @@ module Plotty
 		end
 		
 		def plot!
-			r, w = IO.pipe
-			
-			pid = Process.spawn({'GNUTERM' => 'dumb'}, "gnuplot -p -e \"set terminal dumb #{size.join(' ')}; plot '<cat' with lines notitle\"", in: r, out: STDOUT, err: STDERR)
-			
-			r.close
-			
-			@x.each do |x|
-				y = @y.call(x)
-				w.puts "#{x} #{y}"
+			File.open("data.txt", "w") do |file|
+				@x.each do |x|
+					values = @y.collect do |function|
+						function.call(x)
+					end
+					
+					puts "#{x}: #{values.inspect}"
+					file.puts "#{x} #{values.join(' ')}"
+				end
 			end
 			
-			w.close
+			plots = @y.collect.with_index{|function, index| "'data.txt' using 1:#{index+2} with lines title #{function.title.dump}"}
 			
-			Process.waitpid pid
+			system("gnuplot", "-e", "set terminal caca driver ncurses; plot #{plots.join(', ')}")
 		end
 	end
 end
