@@ -36,7 +36,7 @@ module Plotty
 				return to_enum unless block_given?
 				
 				i = min
-				while i < max
+				while i <= max
 					yield i
 					i *= scale
 				end
@@ -44,12 +44,13 @@ module Plotty
 		end
 		
 		def self.parse(command)
-			if command =~ /^(.*?):(.*?)$/
+			case command
+			when /^(.*?):\*(.*?):(.*?)$/
+				Scalar.new($1.to_i, $3.to_i, $2.to_i)
+			when /^(.*?):(.*?):(.*?)$/
+				Linear.new($1.to_i, $3.to_i, $2.to_i)
+			when command =~ /^(.*?):(.*?)$/
 				Linear.new($1.to_i, $2.to_i, 1)
-			elsif command =~ /^(.*?):\*(.*?):(.*?)$/
-				Scalar.new($1.to_i, $2.to_i, $3.to_i)
-			elsif command =~ /^(.*?):(.*?):(.*?)$/
-				Linear.new($1.to_i, $2.to_i, $3.to_i)
 			end
 		end
 	end

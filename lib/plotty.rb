@@ -1,5 +1,3 @@
-require "plotty/version"
 
-module Plotty
-	# Your code goes here...
-end
+require_relative "plotty/version"
+require_relative "plotty/graph"
