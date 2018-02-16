@@ -63,6 +63,8 @@ module Plotty
 		def call(value)
 			r, w = IO.pipe
 			
+			puts "Running #{@command} with x = #{value}..."
+			
 			pid = Process.spawn({'x' => value.to_s}, @command, out: w, err: STDERR)
 			
 			w.close
@@ -72,7 +74,11 @@ module Plotty
 			Process.waitpid pid
 			
 			if match = @pattern.match(buffer)
-				return match[1] || match[0]
+				result = match[1] || match[0]
+				
+				puts "\tresult = #{result}"
+				
+				return result
 			end
 		end
 	end
