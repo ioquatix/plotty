@@ -55,22 +55,23 @@ module Plotty
 		end
 	end
 	
-	class Function
-		def initialize(pattern, command)
-			@pattern = Regexp.new(pattern)
-			@command = command
-		end
-		
-		def title
-			@command
+	Function = Struct.new(:pattern, :command, :title) do
+		def self.parse(pattern, command)
+			pattern = Regexp.new(pattern)
+			
+			if command =~ /^(\w+):(.*?)$/
+				self.new(pattern, $2, $1)
+			else
+				self.new(pattern, command, command)
+			end
 		end
 		
 		def call(value)
 			r, w = IO.pipe
 			
-			puts "Running #{@command} with x = #{value}..."
+			# puts "Running #{@command} with x = #{value}..."
 			
-			pid = Process.spawn({'x' => value.to_s}, @command, out: w, err: STDERR)
+			pid = Process.spawn({'x' => value.to_s}, self.command, out: w, err: STDERR)
 			
 			w.close
 			
@@ -78,10 +79,10 @@ module Plotty
 			
 			Process.waitpid pid
 			
-			if match = @pattern.match(buffer)
+			if match = self.pattern.match(buffer)
 				result = match[1] || match[0]
 				
-				puts "\tresult = #{result}"
+				# puts "\tresult = #{result}"
 				
 				return result
 			end
@@ -97,7 +98,7 @@ module Plotty
 		def self.parse(x, y, commands)
 			self.new(
 				Sequence.parse(x),
-				commands.collect{|command| Function.new(y, command)},
+				commands.collect{|command| Function.parse(y, command)},
 			)
 		end
 		
@@ -105,21 +106,54 @@ module Plotty
 			TTY::Screen.size.reverse
 		end
 		
-		def plot!(script = nil)
+		def generate_values
 			File.open("data.txt", "w") do |file|
+				file.sync = true
+				
 				@x.each do |x|
 					values = @y.collect do |function|
 						function.call(x)
 					end
 					
-					puts "#{x}: #{values.inspect}"
+					# puts "#{x}: #{values.inspect}"
 					file.puts "#{x} #{values.join(' ')}"
 				end
 			end
+		end
+		
+		def generate_plot(path = "plot.gp")
+			File.open(path, "w") do |file|
+				yield file if block_given?
+				
+				file.write("plot ")
+				first = true
+				@y.collect.with_index do |function, index|
+					if first
+						first = false
+					else
+						file.write ','
+					end
+					
+					file.write "'data.txt' using 1:#{index+2} with lines title #{function.title.dump}"
+				end
+				
+				file.puts
+				
+				# file.puts "pause 1"
+				# file.puts "reread"
+			end
 			
-			plots = @y.collect.with_index{|function, index| "'data.txt' using 1:#{index+2} with lines title #{function.title.dump}"}
+			return path
+		end
+		
+		def plot!(script = nil)
+			generate_values
 			
-			system("gnuplot", "-e", "#{script}; plot #{plots.join(', ')}")
+			path = generate_plot do |file|
+				file.puts script if script
+			end
+			
+			system("gnuplot", path)
 		end
 	end
 end
