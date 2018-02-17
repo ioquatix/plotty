@@ -24,7 +24,7 @@ Or install it yourself as:
 
 	plotty -x 1:10 -y '\d+' -- 'echo 1' 'echo $x' 'expr $x \* $x'
 
-This will graph the results xecuting the 3 commands after the split with `$x = 1, 2, 3, ... 10`. The y value is computed by the first match of the given regular expression.
+This will graph the results of executing the 3 commands after the split (`--`) with `$x = 1, 2, 3, ... 10`. The y value is computed by the first match of the given regular expression (in this case `\d+`).
 
 ### X Axis
 
