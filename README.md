@@ -1,8 +1,6 @@
 # Plotty
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/plotty`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+`plotty` is a quick hack to do performance comparisions on the command line. It sweeps the x value and runs commands to compute the y value. The y value is extracted from the stdout of the command using a regular expression. The graphs are drawn using `gnuplot` which you'll need to have installed.
 
 ## Installation
 
