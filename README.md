@@ -145,7 +145,7 @@ plotty -x 1:1:100 -y '\d+' -e "set terminal dumb; set key outside" -- 'echo $x' 
 
 Released under the MIT license.
 
-Copyright, 2012, 2014, by [Samuel G. D. Williams](http://www.codeotaku.com/samuel-williams).
+Copyright, 2018, by [Samuel G. D. Williams](http://www.codeotaku.com/samuel-williams).
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
