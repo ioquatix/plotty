@@ -35,6 +35,8 @@ module Plotty
 				option "-x <axis>", "Specify the x axis explicitly", default: "1:10"
 				option "-y <axis>", "Specify the y axis explicitly"
 				
+				option "-e/--script <script>", "Prepend this script to the gnuplot command."
+				
 				option '-h/--help', "Print out help information."
 				option '-v/--version', "Print out the application version."
 			end
@@ -42,7 +44,7 @@ module Plotty
 			split :command
 			
 			def plot_graph
-				Graph.parse(options[:x], options[:y], @command).plot!
+				Graph.parse(options[:x], options[:y], @command).plot!(options[:script])
 			end
 			
 			def invoke(program_name: File.basename($0))

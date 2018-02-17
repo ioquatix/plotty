@@ -105,7 +105,7 @@ module Plotty
 			TTY::Screen.size.reverse
 		end
 		
-		def plot!
+		def plot!(script = nil)
 			File.open("data.txt", "w") do |file|
 				@x.each do |x|
 					values = @y.collect do |function|
@@ -119,7 +119,7 @@ module Plotty
 			
 			plots = @y.collect.with_index{|function, index| "'data.txt' using 1:#{index+2} with lines title #{function.title.dump}"}
 			
-			system("gnuplot", "-e", "set terminal caca driver ncurses; plot #{plots.join(', ')}")
+			system("gnuplot", "-e", "#{script}; plot #{plots.join(', ')}")
 		end
 	end
 end

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    plotty (0.2.0)
+    plotty (0.3.0)
       samovar
       tty-screen
 
