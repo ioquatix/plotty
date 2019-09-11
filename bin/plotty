@@ -22,4 +22,4 @@
 
 require_relative '../lib/plotty/command'
 
-Plotty::Command.parse(ARGV).invoke
+Plotty::Command::Top.call

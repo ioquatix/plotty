@@ -24,16 +24,14 @@ require_relative 'graph'
 
 module Plotty
 	module Command
-		def self.parse(*args)
-			Top.parse(*args)
-		end
-		
 		class Top < Samovar::Command
 			self.description = "Render graphs by executing commands."
 			
 			options do
+				option "-n/--name <string>", "The name of the output plot.", default: "plot"
+				
 				option "-x <axis>", "Specify the x axis explicitly", default: "1:10"
-				option "-y <axis>", "Specify the y axis explicitly"
+				option "-y <axis>", "Regular expression for the y-axis value."
 				
 				option "-e/--script <script>", "Prepend this script to the gnuplot command."
 				
@@ -44,10 +42,10 @@ module Plotty
 			split :command
 			
 			def plot_graph
-				Graph.parse(options[:x], options[:y], @command).plot!(options[:script])
+				Graph.parse(options[:x], options[:y], @command).plot!(options[:script], options[:name])
 			end
 			
-			def invoke(program_name: File.basename($0))
+			def call(program_name: File.basename($0))
 				if @options[:version]
 					puts "plotty v#{Teapot::VERSION}"
 				elsif @options[:help] or @command.nil?

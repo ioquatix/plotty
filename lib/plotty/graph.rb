@@ -45,6 +45,8 @@ module Plotty
 		
 		def self.parse(command)
 			case command
+			when /^(.*?),(.*?)$/
+				command.split(',').map(&:to_i)
 			when /^(.*?):\*(.*?):(.*?)$/
 				Scalar.new($1.to_i, $3.to_i, $2.to_i)
 			when /^(.*?):(.*?):(.*?)$/
@@ -57,7 +59,7 @@ module Plotty
 	
 	Function = Struct.new(:pattern, :command, :title) do
 		def self.parse(pattern, command)
-			pattern = Regexp.new(pattern)
+			pattern = Regexp.new(pattern, Regexp::MULTILINE)
 			
 			if command =~ /^(\w+):(.*?)$/
 				self.new(pattern, $2, $1)
@@ -69,7 +71,7 @@ module Plotty
 		def call(value)
 			r, w = IO.pipe
 			
-			# puts "Running #{@command} with x = #{value}..."
+			$stderr.puts "Running #{self.command} with x = #{value}..."
 			
 			pid = Process.spawn({'x' => value.to_s}, self.command, out: w, err: STDERR)
 			
@@ -80,11 +82,13 @@ module Plotty
 			Process.waitpid pid
 			
 			if match = self.pattern.match(buffer)
-				result = match[1] || match[0]
+				$stderr.puts "\tresult = #{match.inspect}"
 				
-				# puts "\tresult = #{result}"
-				
-				return result
+				if match.captures.empty?
+					return [match[0]]
+				else
+					return match.captures
+				end
 			end
 		end
 	end
@@ -106,8 +110,11 @@ module Plotty
 			TTY::Screen.size.reverse
 		end
 		
-		def generate_values
-			File.open("data.txt", "w") do |file|
+		def generate_values(name)
+			path = name + ".csv"
+			values = nil
+			
+			File.open(path, "w") do |file|
 				file.sync = true
 				
 				@x.each do |x|
@@ -115,41 +122,50 @@ module Plotty
 						function.call(x)
 					end
 					
-					# puts "#{x}: #{values.inspect}"
-					file.puts "#{x} #{values.join(' ')}"
+					file.puts "#{x}, #{values.flatten.join(', ')}"
 				end
 			end
+			
+			return values.map(&:count)
 		end
 		
-		def generate_plot(path = "plot.gp")
-			File.open(path, "w") do |file|
-				yield file if block_given?
-				
-				file.write("plot ")
-				first = true
-				@y.collect.with_index do |function, index|
-					if first
-						first = false
-					else
-						file.write ','
+		def generate_plot(name, offsets, force = false)
+			path = name + ".gp"
+			
+			if !File.exist?(path) or force
+				File.open(path, "w") do |file|
+					file.puts('set datafile separator ","')
+					
+					yield file if block_given?
+					
+					file.write("plot ")
+					first = true
+					@y.collect.with_index do |function, index|
+						if first
+							first = false
+						else
+							file.write ','
+						end
+						
+						file.write "'#{name}.txt' using 1:#{offsets[index]} with lines title #{function.title.dump}"
 					end
 					
-					file.write "'data.txt' using 1:#{index+2} with lines title #{function.title.dump}"
+					file.puts
 				end
-				
-				file.puts
-				
-				# file.puts "pause 1"
-				# file.puts "reread"
 			end
 			
 			return path
 		end
 		
-		def plot!(script = nil)
-			generate_values
+		def plot!(script = nil, name = "plot")
+			counts = generate_values(name)
+			offsets = [2]
 			
-			path = generate_plot do |file|
+			counts.each do |count|
+				offsets << offsets.last + count
+			end
+			
+			path = generate_plot(name, offsets) do |file|
 				file.puts script if script
 			end
 			
