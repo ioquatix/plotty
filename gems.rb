@@ -3,5 +3,6 @@ source "https://rubygems.org"
 gemspec
 
 group :develoment do
-	gem 'pry'
+	gem 'bake-modernize'
+	gem 'bake-bundler'
 end

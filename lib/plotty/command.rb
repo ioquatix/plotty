@@ -39,7 +39,7 @@ module Plotty
 				option '-v/--version', "Print out the application version."
 			end
 			
-			split :command
+			split :command, "The command to execute."
 			
 			def plot_graph
 				Graph.parse(options[:x], options[:y], @command).plot!(options[:script], options[:name])
